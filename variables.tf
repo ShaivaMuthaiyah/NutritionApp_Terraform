@@ -11,6 +11,12 @@ variable "aws_secret_key" {
   sensitive   = true
 }
 
+variable "root_arn" {
+  description = "AWS Root User ARN"
+  type        = string
+  sensitive   = true
+}
+
 
 variable "aws_region" {
   default = "ap-south-1"
