@@ -1,6 +1,14 @@
 
 secrets.tfvars
-.terraform/providers/registry.terraform.io/hashicorp/aws/3.76.1/windows_amd64/terraform-provider-aws_v3.76.1_x5.exe
-.terraform/providers/registry.terraform.io/hashicorp/aws/5.82.2/windows_amd64/terraform-provider-aws_v5.82.2_x5.exe
-.terraform/providers/registry.terraform.io/hashicorp/kubernetes/2.35.1/windows_amd64/terraform-provider-kubernetes_v2.35.1_x5.exe
+.terraform/
+*.tfstate
+*.tfstate.backup
+terraform.tfstate.d/
+.crash
+*.log
+*.bak
+*.backup
+
+# Ignore Terraform CLI metadata files
+.terraform.lock.hcl
 
