@@ -23,6 +23,13 @@ variable "aws_region" {
   type        = string
 }
 
+
+variable "terraform_user_id" {
+
+  type        = string
+  sensitive   = true
+}
+
 # variable "aws_session_token" {
 #   description = "AWS Session Token (Optional)"
 #   type        = string
