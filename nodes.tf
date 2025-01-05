@@ -1,20 +1,36 @@
-resource "aws_iam_role" "nodes" {
-  name = "eks-node-group-nodes"
 
-  assume_role_policy = jsonencode({
-    Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
-      Principal = {
-        Service = "ec2.amazonaws.com"
-      }
-    }]
-    Version = "2012-10-17"
-  })
+
+data "aws_iam_policy_document" "worker_nodes_assume_role_policy" {
+  statement {
+    actions = ["sts:AssumeRole", "sts:AssumeRoleWithWebIdentity"]
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+  }
 }
+
+
+
+
+resource "aws_iam_role" "nodes" {
+  name               = "eks-node-group-nodes"
+  assume_role_policy = data.aws_iam_policy_document.worker_nodes_assume_role_policy.json
+}
+
+resource "aws_iam_role_policy_attachment" "nodes-AWSLoadBalancerControllerRolePolicyAttachment" {
+  role       = aws_iam_role.nodes.name
+  policy_arn = aws_iam_policy.AWSLoadBalancerControllerPolicy.arn
+}
+
 
 resource "aws_iam_role_policy_attachment" "nodes-AmazonEKSWorkerNodePolicy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+  role       = aws_iam_role.nodes.name
+}
+
+resource "aws_iam_role_policy_attachment" "nodes-AmazonEKSLoadBalancingPolicy" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSLoadBalancingPolicy"
   role       = aws_iam_role.nodes.name
 }
 
@@ -50,8 +66,8 @@ resource "aws_eks_node_group" "private-nodes" {
 
   scaling_config {
     desired_size = 1
-    max_size     = 3
-    min_size     = 0
+    max_size     = 2
+    min_size     = 1
   }
 
   update_config {
@@ -77,7 +93,11 @@ resource "aws_eks_node_group" "private-nodes" {
     aws_iam_role_policy_attachment.nodes-AmazonEKSWorkerNodePolicy,
     aws_iam_role_policy_attachment.nodes-AmazonEKS_CNI_Policy,
     aws_iam_role_policy_attachment.nodes-AmazonEC2ContainerRegistryReadOnly,
-    aws_iam_role_policy_attachment.nodes-alb_ingress_controller_policy
+    aws_iam_role_policy_attachment.nodes-alb_ingress_controller_policy,
+    aws_iam_role_policy_attachment.eks_worker_role_attachment,
+    aws_iam_role_policy_attachment.nodes-AmazonEKSLoadBalancingPolicy,
+    # aws_iam_role_policy_attachment.nodes-load-balancer-controller-policy,
+    aws_iam_role_policy_attachment.nodes-AWSLoadBalancerControllerRolePolicyAttachment
   ]
 }
 

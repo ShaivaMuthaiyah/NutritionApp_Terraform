@@ -30,6 +30,21 @@ variable "terraform_user_id" {
   sensitive   = true
 }
 
+
+variable "k8s_namespace" {
+  description = "The Kubernetes namespace"
+  type        = string
+  default     = "kube-system"
+}
+
+variable "k8s_service_account" {
+  description = "The Kubernetes service account"
+  type        = string
+  default     = "aws-load-balancer-controller"
+}
+
+
+
 # variable "aws_session_token" {
 #   description = "AWS Session Token (Optional)"
 #   type        = string

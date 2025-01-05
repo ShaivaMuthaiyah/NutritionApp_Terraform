@@ -5,7 +5,18 @@ resource "aws_iam_policy" "alb_ingress_controller" {
     Statement = [
       {
         Action = [
-          "elasticloadbalancing:*",  # Allows the ALB Controller to manage load balancers
+          "acm:*",
+          "iam:ListServerCertificates",
+          "elasticloadbalancing:CreateLoadBalancer",
+          "elasticloadbalancing:CreateTargetGroup",
+          "elasticloadbalancing:CreateListener",
+          "elasticloadbalancing:RegisterTargets",
+          "elasticloadbalancing:DeregisterTargets",
+          "elasticloadbalancing:DeleteLoadBalancer",
+          "elasticloadbalancing:DeleteTargetGroup",
+          "elasticloadbalancing:DeleteListener",
+          "elasticloadbalancing:ModifyListener",
+          "elasticloadbalancing:ModifyTargetGroup",# Allows the ALB Controller to manage load balancers
           "ec2:AuthorizeSecurityGroupIngress",
           "ec2:CreateSecurityGroup",
           "ec2:DescribeSecurityGroups",
@@ -14,6 +25,7 @@ resource "aws_iam_policy" "alb_ingress_controller" {
           "ec2:DescribeRegions",
           "ec2:DescribeVpcs",
           "ec2:DescribeSubnets",
+          "ec2:*",
           "ec2:CreateVpcLink"
         ]
         Effect   = "Allow"

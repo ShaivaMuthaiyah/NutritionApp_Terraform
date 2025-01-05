@@ -1,109 +1,102 @@
-# Define an IAM Policy Resource
-resource "aws_iam_policy" "load_balancer_controller_policy" {
-  name        = "AWSLoadBalancerControllerIAMPolicy"
-  description = "IAM Policy for the AWS Load Balancer Controller"
+# Data resource to get the current AWS account id
+data "aws_caller_identity" "current" {}
 
-  # Directly include the JSON policy
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "ec2:Describe*",
-        "elasticloadbalancing:*",
-        "ec2:AuthorizeSecurityGroupIngress",
-        "ec2:RevokeSecurityGroupIngress",
-        "ec2:DeleteSecurityGroup",
-        "ec2:CreateSecurityGroup",
-        "ec2:ModifyInstanceAttribute",
-        "ec2:ModifyNetworkInterfaceAttribute",
-        "ec2:ModifySubnetAttribute",
-        "ec2:DescribeAvailabilityZones",
-        "ec2:DescribeSecurityGroups",
-        "ec2:DescribeSubnets",
-        "ec2:DescribeVpcs",
-        "ec2:DescribeAccountAttributes",
-        "ec2:DescribeInstances",
-        "ec2:DescribeInstanceStatus",
-        "ec2:DescribeNetworkInterfaces",
-        "ec2:CreateTags",
-        "ec2:DeleteTags",
-        "ec2:CreateVpcPeeringConnection",
-        "ec2:DescribeVpcPeeringConnections",
-        "ec2:AcceptVpcPeeringConnection",
-        "ec2:RejectVpcPeeringConnection",
-        "route53:ChangeResourceRecordSets",
-        "route53:ListResourceRecordSets",
-        "route53:GetChange",
-        "route53:ListHostedZonesByName",
-        "route53:ListHostedZones",
-        "route53:CreateHealthCheck",
-        "route53:GetHealthCheck",
-        "route53:ListHealthChecks",
-        "route53:DeleteHealthCheck",
-        "tag:GetResources",
-        "tag:TagResources",
-        "wafv2:AssociateWebACL",
-        "wafv2:DisassociateWebACL",
-        "wafv2:GetWebACL",
-        "wafv2:ListWebACLs",
-        "shield:CreateProtection",
-        "shield:DeleteProtection",
-        "shield:DescribeProtection",
-        "shield:DescribeSubscription",
-        "shield:ListProtections"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
-EOF
+
+
+# locals {
+#   iam_policy = file("iam-policy.json")
+# }
+
+
+# # Define IAM Policy Resource
+# resource "aws_iam_policy" "load_balancer_controller_policy" {
+#   name        = "AWSLoadBalancerControllerIAMPolicy"
+#   description = "IAM Policy for the AWS Load Balancer Controller"
+#   policy      = local.iam_policy
+# }
+
+
+resource "aws_iam_policy" "AWSLoadBalancerControllerPolicy" {
+  name        = "AWSLoadBalancerControllerPolicy"
+  path        = "/"
+  description = "AWS Load Balancer Controller Policy"
+
+
+  policy = file("iam-policy.json")
+
+  tags = {
+    Terraform   = "true"
+
+  }
+
 }
 
-# Create a Service Account with the Policy
-resource "aws_iam_role" "eks_service_account" {
-  name               = "AmazonEKSLoadBalancerControllerRole"
-  assume_role_policy = data.aws_iam_policy_document.assume_role_policy.json
+
+module "iam_assumable_role_aws_lb" {
+  source                        = "terraform-aws-modules/iam/aws//modules/iam-assumable-role-with-oidc"
+  version                       = "3.6.0"
+  create_role                   = true
+  role_name                     = "AWSLoadBalancerControllerRole"
+  provider_url                  = aws_iam_openid_connect_provider.eks.url
+  role_policy_arns              = [aws_iam_policy.AWSLoadBalancerControllerPolicy.arn]
+  oidc_fully_qualified_subjects = ["system:serviceaccount:kube-system:aws-load-balancer-controller"]
+
+  tags = {
+    Terraform   = "true"
+  }
+
 }
 
-# IAM Role Assumption Policy for Kubernetes
+
+
+# IAM Role Assumption Policy for Kubernetes (Using the OIDC provider URL dynamically)
 data "aws_iam_policy_document" "assume_role_policy" {
   statement {
     actions = ["sts:AssumeRoleWithWebIdentity"]
+
     principals {
       type        = "Federated"
-      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/oidc.eks.${var.aws_region}.amazonaws.com/id/${output.oidc_provider_id}"]
+      identifiers = [aws_iam_openid_connect_provider.eks.arn] # Ensure correct ARN
     }
+
     condition {
       test     = "StringEquals"
-      variable = "oidc.eks.${var.aws_region}.amazonaws.com/id/${output.oidc_provider_id}:sub"
+      variable = "${aws_iam_openid_connect_provider.eks.url}:sub"
       values   = ["system:serviceaccount:kube-system:aws-load-balancer-controller"]
     }
   }
 }
 
-# Attach Policy to Role
-resource "aws_iam_role_policy_attachment" "lb_policy_attach" {
-  role       = aws_iam_role.eks_service_account.name
-  policy_arn = aws_iam_policy.load_balancer_controller_policy.arn
+
+# Create IAM Role for the Load Balancer Controller with the policy attached
+resource "aws_iam_role" "eks_service_account" {
+  name               = "AmazonEKSLoadBalancerControllerRole"
+  assume_role_policy = data.aws_iam_policy_document.assume_role_policy.json
 }
 
-# Define the Service Account Namespace
-resource "kubernetes_namespace" "kube_system" {
-  metadata {
-    name = "kube-system"
-  }
+# Attach Policy to Role
+# resource "aws_iam_role_policy_attachment" "lb_policy_attach" {
+#   role       = aws_iam_role.eks_service_account.name
+#   policy_arn = aws_iam_policy.load_balancer_controller_policy.arn
+# }
+
+
+resource "aws_iam_role_policy_attachment" "AWSLoadBalancerControllerRolePolicyAttachment" {
+  role       = aws_iam_role.eks_service_account.name
+  policy_arn = aws_iam_policy.AWSLoadBalancerControllerPolicy.arn
 }
 
 # Map the Service Account to the Role
 resource "kubernetes_service_account" "aws_load_balancer_controller" {
   metadata {
     name      = "aws-load-balancer-controller"
-    namespace = kubernetes_namespace.kube_system.metadata[0].name
+    namespace = "kube-system"
+    annotations = {
+      "eks.amazonaws.com/role-arn" = aws_iam_role.eks_service_account.arn
+    }
   }
 
   automount_service_account_token = true
-  depends_on                      = [aws_iam_role_policy_attachment.lb_policy_attach]
+  # depends_on                      = [aws_iam_role_policy_attachment.lb_policy_attach]
+  depends_on                      = [aws_iam_role_policy_attachment.AWSLoadBalancerControllerRolePolicyAttachment]
 }

@@ -22,6 +22,13 @@ resource "aws_iam_role_policy_attachment" "nutrition-AmazonEKSClusterPolicy" {
   role       = aws_iam_role.nutrition.name
 }
 
+
+
+# resource "aws_iam_role_policy_attachment" "nutrition-AWSLoadBalancerControllerRolePolicyAttachment" {
+#   role       = aws_iam_role.eks_service_account.name
+#   policy_arn = aws_iam_policy.AWSLoadBalancerControllerPolicy.arn
+# }
+
 resource "aws_eks_cluster" "nutrition" {
   name     = "nutrition"
   role_arn = aws_iam_role.nutrition.arn
@@ -35,11 +42,13 @@ resource "aws_eks_cluster" "nutrition" {
     ]
   }
 
-  depends_on = [aws_iam_role_policy_attachment.nutrition-AmazonEKSClusterPolicy]
+  depends_on = [
+    aws_iam_role_policy_attachment.nutrition-AmazonEKSClusterPolicy
+    ]
 }
 
 
 
-output "oidc_provider_id" {
-  value = split("/", aws_eks_cluster.nutrition.identity[0].oidc[0].issuer)[6]
-}
+# output "oidc_provider_id" {
+#   value = split("/", aws_eks_cluster.nutrition.identity[0].oidc[0].issuer)[6]
+# }
