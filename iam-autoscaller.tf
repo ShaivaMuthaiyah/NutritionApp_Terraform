@@ -32,10 +32,17 @@ resource "aws_iam_policy" "eks_cluster_autoscaler" {
                 "autoscaling:DescribeLaunchConfigurations",
                 "autoscaling:DescribeTags",
                 "autoscaling:SetDesiredCapacity",
+                "eks:DescribeNodegroup",
                 "autoscaling:TerminateInstanceInAutoScalingGroup",
+                "ec2:DescribeLaunchTemplateVersions",
+                "ec2:DescribeInstanceTypes",
                 "ec2:DescribeLaunchTemplateVersions"
             ]
-      Effect   = "Allow"
+      Effect   = "Allow",
+      "Action": [
+        "autoscaling:SetDesiredCapacity",
+        "autoscaling:TerminateInstanceInAutoScalingGroup"
+      ],
       Resource = "*"
     }]
     Version = "2012-10-17"
@@ -49,4 +56,16 @@ resource "aws_iam_role_policy_attachment" "eks_cluster_autoscaler_attach" {
 
 output "eks_cluster_autoscaler_arn" {
   value = aws_iam_role.eks_cluster_autoscaler.arn
+}
+
+
+# service account for the autoscaler to use in the clsuter
+resource "kubernetes_service_account" "eks_cluster-autoscaler" {
+  metadata {
+    name      = "cluster-autoscaler"
+    namespace = "kube-system"
+    annotations = {
+      "eks.amazonaws.com/role-arn" = aws_iam_role.eks_cluster_autoscaler.name
+    }
+  }
 }

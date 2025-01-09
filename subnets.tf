@@ -6,7 +6,8 @@ resource "aws_subnet" "private-ap-south-1a" {
   tags = {
     "Name"                            = "private-ap-south-1a"
     "kubernetes.io/role/internal-elb" = "1"
-    "kubernetes.io/cluster/nutrition"      = "owned"
+    "kubernetes.io/cluster/${var.cluster_name}"      = "owned"
+    "kubernetes.io/cluster/${var.cluster_name}"      = "shared"
   }
 }
 
@@ -18,7 +19,8 @@ resource "aws_subnet" "private-ap-south-1b" {
   tags = {
     "Name"                            = "private-ap-south-1b"
     "kubernetes.io/role/internal-elb" = "1"
-    "kubernetes.io/cluster/nutrition"      = "owned"
+    "kubernetes.io/cluster/${var.cluster_name}"      = "owned"
+    "kubernetes.io/cluster/${var.cluster_name}"      = "shared"
   }
 }
 
@@ -31,7 +33,8 @@ resource "aws_subnet" "public-ap-south-1a" {
   tags = {
     "Name"                       = "public-ap-south-1a"
     "kubernetes.io/role/elb"     = "1"
-    "kubernetes.io/cluster/nutrition" = "owned"
+    "kubernetes.io/cluster/${var.cluster_name}" = "owned"
+    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
   }
 }
 
@@ -44,6 +47,7 @@ resource "aws_subnet" "public-ap-south-1b" {
   tags = {
     "Name"                       = "public-ap-south-1b"
     "kubernetes.io/role/elb"     = "1"
-    "kubernetes.io/cluster/nutrition" = "owned"
+    "kubernetes.io/cluster/${var.cluster_name}" = "owned"
+    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
   }
 }

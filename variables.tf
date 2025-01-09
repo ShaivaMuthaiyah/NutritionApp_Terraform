@@ -44,6 +44,12 @@ variable "k8s_service_account" {
 }
 
 
+variable "cluster_name" {
+  description = "Name of the cluster"
+  type        = string
+  default     = "nutrition"
+}
+
 
 # variable "aws_session_token" {
 #   description = "AWS Session Token (Optional)"

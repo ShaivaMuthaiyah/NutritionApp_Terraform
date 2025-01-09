@@ -45,10 +45,13 @@ resource "aws_eks_cluster" "nutrition" {
   depends_on = [
     aws_iam_role_policy_attachment.nutrition-AmazonEKSClusterPolicy
     ]
+
+
+    
 }
 
 
 
-# output "oidc_provider_id" {
-#   value = split("/", aws_eks_cluster.nutrition.identity[0].oidc[0].issuer)[6]
-# }
+output "cluster_name" {
+   value = aws_eks_cluster.nutrition.name
+ }

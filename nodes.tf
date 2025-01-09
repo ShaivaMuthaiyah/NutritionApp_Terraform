@@ -11,8 +11,6 @@ data "aws_iam_policy_document" "worker_nodes_assume_role_policy" {
 }
 
 
-
-
 resource "aws_iam_role" "nodes" {
   name               = "eks-node-group-nodes"
   assume_role_policy = data.aws_iam_policy_document.worker_nodes_assume_role_policy.json
@@ -62,11 +60,11 @@ resource "aws_eks_node_group" "private-nodes" {
   ]
 
   capacity_type  = "ON_DEMAND"
-  instance_types = ["t3.small"]
+  instance_types = ["t3.small", "t3.medium"]
 
   scaling_config {
     desired_size = 1
-    max_size     = 2
+    max_size     = 4
     min_size     = 1
   }
 
@@ -76,6 +74,11 @@ resource "aws_eks_node_group" "private-nodes" {
 
   labels = {
     role = "general"
+  }
+
+  tags = {
+    "k8s.io/cluster-autoscaler/enabled" = "true"
+    "k8s.io/cluster-autoscaler/nutrition" = "true"  # Replace with your cluster name
   }
 
   # taint {
@@ -96,6 +99,7 @@ resource "aws_eks_node_group" "private-nodes" {
     aws_iam_role_policy_attachment.nodes-alb_ingress_controller_policy,
     aws_iam_role_policy_attachment.eks_worker_role_attachment,
     aws_iam_role_policy_attachment.nodes-AmazonEKSLoadBalancingPolicy,
+    aws_iam_role_policy_attachment.eks_cluster_autoscaler_attach,
     # aws_iam_role_policy_attachment.nodes-load-balancer-controller-policy,
     aws_iam_role_policy_attachment.nodes-AWSLoadBalancerControllerRolePolicyAttachment
   ]
