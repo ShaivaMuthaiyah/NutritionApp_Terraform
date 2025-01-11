@@ -33,6 +33,11 @@ resource "aws_eks_cluster" "nutrition" {
   name     = "nutrition"
   role_arn = aws_iam_role.nutrition.arn
 
+  access_config {
+    authentication_mode = var.access_config_cluster
+  }
+
+
   vpc_config {
     subnet_ids = [
       aws_subnet.private-ap-south-1a.id,
@@ -45,13 +50,11 @@ resource "aws_eks_cluster" "nutrition" {
   depends_on = [
     aws_iam_role_policy_attachment.nutrition-AmazonEKSClusterPolicy
     ]
-
-
     
 }
-
 
 
 output "cluster_name" {
    value = aws_eks_cluster.nutrition.name
  }
+

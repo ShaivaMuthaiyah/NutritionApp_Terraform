@@ -51,6 +51,13 @@ variable "cluster_name" {
 }
 
 
+variable "access_config_cluster" {
+  description = "Cluster access possible through configmap as well as api access entries"
+  type        = string
+  default     = "API_AND_CONFIG_MAP"
+}
+
+
 # variable "aws_session_token" {
 #   description = "AWS Session Token (Optional)"
 #   type        = string
