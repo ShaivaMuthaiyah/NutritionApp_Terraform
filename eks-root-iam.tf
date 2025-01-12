@@ -12,7 +12,7 @@ resource "aws_eks_access_policy_association" "root_access" {
 
 
 
- # Acess entry on the EKS cluster for the root user to access it
+ # Access entry on the EKS cluster for the root user to access it
  resource "aws_eks_access_entry" "root_access_entry" {
   cluster_name      = var.cluster_name
   principal_arn     = var.root_arn
