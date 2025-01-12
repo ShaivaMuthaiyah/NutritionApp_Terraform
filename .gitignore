@@ -9,7 +9,8 @@ terraform.tfstate.d/
 *.bak
 *.backup
 *.exe
-
+terraform-provider-aws_v3.76.1_x5.exe
+terraform-provider-aws_v5.82.2_x5.exe
 # Ignore Terraform CLI metadata files
 .terraform.lock.hcl
 
