@@ -2,20 +2,6 @@
 data "aws_caller_identity" "current" {}
 
 
-
-# locals {
-#   iam_policy = file("iam-policy.json")
-# }
-
-
-# # Define IAM Policy Resource
-# resource "aws_iam_policy" "load_balancer_controller_policy" {
-#   name        = "AWSLoadBalancerControllerIAMPolicy"
-#   description = "IAM Policy for the AWS Load Balancer Controller"
-#   policy      = local.iam_policy
-# }
-
-
 resource "aws_iam_policy" "AWSLoadBalancerControllerPolicy" {
   name        = "AWSLoadBalancerControllerPolicy"
   path        = "/"
@@ -48,7 +34,6 @@ module "iam_assumable_role_aws_lb" {
 }
 
 
-
 # IAM Role Assumption Policy for Kubernetes (Using the OIDC provider URL dynamically)
 data "aws_iam_policy_document" "assume_role_policy" {
   statement {
@@ -56,7 +41,7 @@ data "aws_iam_policy_document" "assume_role_policy" {
 
     principals {
       type        = "Federated"
-      identifiers = [aws_iam_openid_connect_provider.eks.arn] # Ensure correct ARN
+      identifiers = [aws_iam_openid_connect_provider.eks.arn] 
     }
 
     condition {
@@ -70,16 +55,10 @@ data "aws_iam_policy_document" "assume_role_policy" {
 
 # Create IAM Role for the Load Balancer Controller with the policy attached
 resource "aws_iam_role" "eks_service_account" {
+  description = "IAM Role used by the Load Balancer Controller to create LB's"
   name               = "AmazonEKSLoadBalancerControllerRole"
   assume_role_policy = data.aws_iam_policy_document.assume_role_policy.json
 }
-
-# Attach Policy to Role
-# resource "aws_iam_role_policy_attachment" "lb_policy_attach" {
-#   role       = aws_iam_role.eks_service_account.name
-#   policy_arn = aws_iam_policy.load_balancer_controller_policy.arn
-# }
-
 
 resource "aws_iam_role_policy_attachment" "AWSLoadBalancerControllerRolePolicyAttachment" {
   role       = aws_iam_role.eks_service_account.name
@@ -98,5 +77,5 @@ resource "kubernetes_service_account" "aws_load_balancer_controller" {
 
   automount_service_account_token = true
   # depends_on                      = [aws_iam_role_policy_attachment.lb_policy_attach]
-  depends_on                      = [aws_iam_role_policy_attachment.AWSLoadBalancerControllerRolePolicyAttachment]
+  depends_on                      = [aws_iam_role_policy_attachment.AWSLoadBalancerControllerRolePolicyAttachment, aws_eks_access_entry.terraform_user_access_entry]
 }

@@ -31,6 +31,13 @@ variable "terraform_user_id" {
 }
 
 
+
+variable "terraform_user_arn" {
+
+  type        = string
+  sensitive   = true
+}
+
 variable "k8s_namespace" {
   description = "The Kubernetes namespace"
   type        = string

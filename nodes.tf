@@ -54,10 +54,12 @@ resource "aws_eks_node_group" "private-nodes" {
   node_group_name = "private-nodes"
   node_role_arn   = aws_iam_role.nodes.arn
 
+
   subnet_ids = [
     aws_subnet.private-ap-south-1a.id,
     aws_subnet.private-ap-south-1b.id
   ]
+
 
   capacity_type  = "ON_DEMAND"
   instance_types = ["t3.small", "t3.medium"]
@@ -99,23 +101,9 @@ resource "aws_eks_node_group" "private-nodes" {
     aws_iam_role_policy_attachment.nodes-alb_ingress_controller_policy,
     aws_iam_role_policy_attachment.eks_worker_role_attachment,
     aws_iam_role_policy_attachment.nodes-AmazonEKSLoadBalancingPolicy,
-    aws_iam_role_policy_attachment.eks_cluster_autoscaler_attach,
+    aws_iam_role_policy_attachment.ClusterAutoScalingControllerRolePolicyAttachment,
     # aws_iam_role_policy_attachment.nodes-load-balancer-controller-policy,
     aws_iam_role_policy_attachment.nodes-AWSLoadBalancerControllerRolePolicyAttachment
   ]
 }
 
-# resource "aws_launch_template" "eks-with-disks" {
-#   name = "eks-with-disks"
-
-#   key_name = "local-provisioner"
-
-#   block_device_mappings {
-#     device_name = "/dev/xvdb"
-
-#     ebs {
-#       volume_size = 50
-#       volume_type = "gp2"
-#     }
-#   }
-# }
